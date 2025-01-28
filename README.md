@@ -4,77 +4,67 @@
 This guide walks you through the steps to set up a MySQL Docker container, initialize a database with a custom schema, and access the database.
 ---
 
-## 2. Create the `docker-compose.yml` File
+## 2. Create the `Dockerfile` File
 
-### Example `docker-compose.yml`:
+### Example ``:
 
 ``` bash
 
-version: '3.8'
+# Use the official MySQL 8.0 image as the base image
+FROM mysql:8.0
 
-services:
-  db:
-    image: mysql:8.0
-    container_name: training_management_db
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword  # Set MySQL root password
-      MYSQL_DATABASE: training_management  # Name of the database to create
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the initialization script
-    ports:
-      - "3306:3306"  # Expose MySQL port
-    networks:
-      - training_management_network
+# Set environment variables for MySQL
+ENV MYSQL_ROOT_PASSWORD=rootpassword
+ENV MYSQL_DATABASE=training_management
 
-networks:
-  training_management_network:
-    driver: bridge
+# Copy the init.sql file into the container's initialization directory
+COPY init.sql /docker-entrypoint-initdb.d/
+
+# Expose the MySQL default port
+EXPOSE 3306
 
 ```
 
 ### Explanation:
-- **MySQL Image**: Uses the official MySQL 8.0 image from Docker Hub.
+- **MySQL Image**: The mysql:8.0 official image provides a lightweight and reliable MySQL server.
 - **Environment Variables**:
 	- •	MYSQL_ROOT_PASSWORD: Sets the root password for MySQL.
-	- •	MYSQL_DATABASE: Automatically creates a database named training_management.
-	- •	Volume: Mounts your init.sql file to initialize the database schema.
-	- •	Ports: Exposes MySQL port 3306 for local access.
+	- •	MYSQL_DATABASE: MYSQL_DATABASE: Automatically creates a database named training_management during initialization.
+	- •	Volume: The init.sql file is copied into the /docker-entrypoint-initdb.d/ directory, which initializes the database schema on container startup.
+	- •	Ports: Expose: Port 3306 (the default MySQL port) is exposed for access.
 
-## Create the init.sql File
 
-### Example init.sql:
+
+## 3. Build and Start the Docker Containers
+
+## Command to Build and Run the Docker Container:
+
+# Step 1: Build the Docker Image
+- Run the following command in the terminal from the directory containing the Dockerfile and init.sql:
+
 ```bash
-CREATE TABLE example_table (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO example_table (name) VALUES ('Sample Entry');
-
+$ docker build -t training_management_db .
 ```
 
 ### Explanation:
-
-- This SQL script creates a table named example_table and inserts a sample entry.
-
-## Build and Start the Docker Containers
-
-## Command to Build and Run Containers:
-```bash
-docker-compose up -d
-```
-
-### Explanation:
-- **`-d`**: Runs the container in detached mode (in the background).
-- **`--name mysql-container`**: Assigns the name `mysql-container` to your container.
-- **`-e MYSQL_ROOT_PASSWORD=root`**: Passes the root password as an environment variable.
-- **`-p 3307:3306`**: Maps port `3306` inside the container to port `3307` on your local machine.
-- **`training-management-db`**: Refers to the image built in Step 3.
+- **`-t`**: training_management_db: Tags the image with the name training_management_db.
 
 ---
+# Step 2: Run the Docker Container
+- Start the container using:
 
-## 5. Verify the Container is Running
+```bash
+$ docker run -d --name training_management_db \
+  -p 3307:3306 \
+  training_management_db
+```
+### Explanation:
+- •	-d: Runs the container in detached mode (in the background).
+- •	--name training_management_db: Names the container training_management_db.
+- •	-p 3307:3306: Maps port 3306 inside the container to port 3307 on your local machine.
+- •	training_management_db: Specifies the image built in Step 1.
+
+## 4. Verify the Container is Running
 
 ### Command:
 ```bash
@@ -82,11 +72,11 @@ $ docker ps
 ```
 - **Purpose**: Lists all running containers.
 - **Expected Output**:
-  - You should see `mysql-container` with its status as `Up` and the port mapping (`3307->3306`).
+  - You should see the training_management_db container with its status as Up and the port mapping (3307->3306).
 
 ---
 
-## 6. Access the Database
+## 5. Access the Database
 
 - You can connect to the MySQL container using any MySQL client (e.g., MySQL Workbench, DBeaver, or command-line).
 
@@ -102,12 +92,24 @@ After connecting, verify the setup by running:
 ```sql
 SELECT * FROM example_table;
 ```
-
+## 6.Stopping and Removing the Container
+- Stopping and Removing the Container
+```bash
+$ docker stop training_management_db
+```
+- To remove the container:
+```bash
+$ docker rm training_management_db
+```
+- To remove the image:
+```bash
+$ docker rmi training_management_db
+```
 ---
 
 ## Summary
-- We set up a MySQL Docker container using docker-compose.
-- The container automatically initializes the database with a custom schema using the init.sql script.
-- We can access the database via MySQL clients on localhost:3306.
+- We set up a MySQL Docker container using Dockerfile.
+- The database was automatically initialized with a custom schema using the init.sql file.
+- The MySQL database is accessible via port 3306 on your local machine.
 - Commands for stopping and removing the container are also provided.
 
